@@ -1,0 +1,13 @@
+{
+  "name": "bahar-durmaz-case3",
+  "private": true,
+  "scripts": {
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "test": "npm run test:api",
+    "test:api": "cypress run --spec 'cypress/e2e/**/*.cy.js'"
+  },
+  "devDependencies": {
+    "cypress": "^14.5.4"
+  }
+}
