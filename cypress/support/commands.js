@@ -5,25 +5,23 @@ Cypress.Commands.add('getPetWhenReady', (petId, options = {}) => {
   const delayMs = options.delayMs ?? 500
 
   const poll = (attempt) => {
-    cy.request({
+    return cy.request({
       method: 'GET',
       url: `${PET_BASE}/${petId}`,
       failOnStatusCode: false,
     }).then((res) => {
       if (res.status === 200) {
-        cy.wrap(res, { log: attempt > 1 })
-        return
+        return cy.wrap(res, { log: attempt > 1 })
       }
       if (attempt >= maxAttempts) {
         expect(res.status, `GET ${PET_BASE}/${petId} response (demo read-after-write lag)`).to.eq(200)
         return
       }
-      cy.wait(delayMs)
-      poll(attempt + 1)
+      return cy.wait(delayMs).then(() => poll(attempt + 1))
     })
   }
 
-  poll(1)
+  return poll(1)
 })
 
 Cypress.Commands.add('findPetInFindByStatus', (petId, status = 'available', options = {}) => {
@@ -31,7 +29,7 @@ Cypress.Commands.add('findPetInFindByStatus', (petId, status = 'available', opti
   const delayMs = options.delayMs ?? 500
 
   const poll = (attempt) => {
-    cy.request({
+    return cy.request({
       method: 'GET',
       url: `${PET_BASE}/findByStatus`,
       qs: { status },
@@ -41,8 +39,7 @@ Cypress.Commands.add('findPetInFindByStatus', (petId, status = 'available', opti
       const found =
         Array.isArray(list) && list.some((p) => p && Number(p.id) === Number(petId))
       if (found) {
-        cy.wrap({ petId, list }, { log: attempt > 1 })
-        return
+        return cy.wrap({ petId, list }, { log: attempt > 1 })
       }
       if (attempt >= maxAttempts) {
         expect(
@@ -51,12 +48,11 @@ Cypress.Commands.add('findPetInFindByStatus', (petId, status = 'available', opti
         ).to.be.true
         return
       }
-      cy.wait(delayMs)
-      poll(attempt + 1)
+      return cy.wait(delayMs).then(() => poll(attempt + 1))
     })
   }
 
-  poll(1)
+  return poll(1)
 })
 
 Cypress.Commands.add('postPetFormWhenReady', (petId, formBody, options = {}) => {
@@ -64,7 +60,7 @@ Cypress.Commands.add('postPetFormWhenReady', (petId, formBody, options = {}) => 
   const delayMs = options.delayMs ?? 500
 
   const poll = (attempt) => {
-    cy.request({
+    return cy.request({
       method: 'POST',
       url: `${PET_BASE}/${petId}`,
       form: true,
@@ -72,19 +68,17 @@ Cypress.Commands.add('postPetFormWhenReady', (petId, formBody, options = {}) => 
       failOnStatusCode: false,
     }).then((res) => {
       if (res.status === 200) {
-        cy.wrap(res, { log: attempt > 1 })
-        return
+        return cy.wrap(res, { log: attempt > 1 })
       }
       if (attempt >= maxAttempts) {
         expect(res.status, `POST (form) ${PET_BASE}/${petId}`).to.eq(200)
         return
       }
-      cy.wait(delayMs)
-      poll(attempt + 1)
+      return cy.wait(delayMs).then(() => poll(attempt + 1))
     })
   }
 
-  poll(1)
+  return poll(1)
 })
 
 Cypress.Commands.add('deletePetWhenReady', (petId, headers = {}, options = {}) => {
@@ -92,24 +86,46 @@ Cypress.Commands.add('deletePetWhenReady', (petId, headers = {}, options = {}) =
   const delayMs = options.delayMs ?? 500
 
   const poll = (attempt) => {
-    cy.request({
+    return cy.request({
       method: 'DELETE',
       url: `${PET_BASE}/${petId}`,
       headers,
       failOnStatusCode: false,
     }).then((res) => {
       if (res.status === 200) {
-        cy.wrap(res, { log: attempt > 1 })
-        return
+        return cy.wrap(res, { log: attempt > 1 })
       }
       if (attempt >= maxAttempts) {
         expect(res.status, `DELETE ${PET_BASE}/${petId}`).to.eq(200)
         return
       }
-      cy.wait(delayMs)
-      poll(attempt + 1)
+      return cy.wait(delayMs).then(() => poll(attempt + 1))
     })
   }
 
-  poll(1)
+  return poll(1)
+})
+
+Cypress.Commands.add('getPetMissingWhenReady', (petId, options = {}) => {
+  const maxAttempts = options.maxAttempts ?? 30
+  const delayMs = options.delayMs ?? 500
+
+  const poll = (attempt) => {
+    return cy.request({
+      method: 'GET',
+      url: `${PET_BASE}/${petId}`,
+      failOnStatusCode: false,
+    }).then((res) => {
+      if (res.status === 404) {
+        return cy.wrap(res, { log: attempt > 1 })
+      }
+      if (attempt >= maxAttempts) {
+        expect(res.status, `GET ${PET_BASE}/${petId} should be 404 after delete`).to.eq(404)
+        return
+      }
+      return cy.wait(delayMs).then(() => poll(attempt + 1))
+    })
+  }
+
+  return poll(1)
 })
